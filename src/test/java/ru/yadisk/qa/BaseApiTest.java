@@ -1,7 +1,7 @@
 package ru.yadisk.qa;
 
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.BeforeAll;
 
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
@@ -14,18 +14,19 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
 public abstract class BaseApiTest {
-
     protected static final String BASE_TEST_PATH = "/qa-tests";
 
     private static final Duration RESOURCE_WAIT_TIMEOUT = Duration.ofSeconds(30);
 
-    protected DiskApiClient client;
+    protected static DiskApiClient client;
+    protected static DiskApiClient unauthenticatedClient;
 
     private final List<String> createdPaths = new ArrayList<>();
 
-    @BeforeEach
-    void initClient() {
+    @BeforeAll
+    static void initClients() {
         client = new DiskApiClient(resolveToken());
+        unauthenticatedClient = new DiskApiClient("");
     }
 
     @AfterEach
@@ -34,7 +35,6 @@ public abstract class BaseApiTest {
             silentlyDelete(path);
         }
     }
-
     protected String newFolderPath() {
         ensureBaseFolder();
         String path = BASE_TEST_PATH + "/" + UUID.randomUUID();
@@ -51,7 +51,6 @@ public abstract class BaseApiTest {
     protected void track(String path) {
         createdPaths.add(path);
     }
-
     protected void uploadSmallFile(String filePath, String content) {
         ApiResponse link = client.getUploadLink(filePath);
         assertEquals(200, link.statusCode(), "Не удалось получить URL для загрузки: " + link.body());
@@ -60,12 +59,10 @@ public abstract class BaseApiTest {
                 link.json().path("href").asText(),
                 link.json().path("method").asText("PUT"),
                 content.getBytes(StandardCharsets.UTF_8));
-
         assertTrue(upload.statusCode() == 201 || upload.statusCode() == 202,
                 "Загрузка файла не удалась: " + upload.statusCode() + " " + upload.body());
         waitForResource(filePath, RESOURCE_WAIT_TIMEOUT);
     }
-
     protected void waitForResource(String path, Duration timeout) {
         long deadline = System.nanoTime() + timeout.toNanos();
         while (System.nanoTime() < deadline) {
@@ -76,7 +73,6 @@ public abstract class BaseApiTest {
         }
         fail("Ресурс не появился в течение " + timeout.toSeconds() + " с: " + path);
     }
-
     protected void waitForResourceAbsent(String path, Duration timeout) {
         long deadline = System.nanoTime() + timeout.toNanos();
         while (System.nanoTime() < deadline) {
@@ -87,13 +83,11 @@ public abstract class BaseApiTest {
         }
         fail("Ресурс не был удалён в течение " + timeout.toSeconds() + " с: " + path);
     }
-
     protected static ApiResponse assertStatus(ApiResponse response, int expectedCode) {
         assertEquals(expectedCode, response.statusCode(),
                 "Неожиданный код ответа. Тело: " + response.body());
         return response;
     }
-
     protected static String resolveToken() {
         String token = System.getProperty("yadisk.token");
         if (token == null || token.isBlank()) {
@@ -108,7 +102,6 @@ public abstract class BaseApiTest {
         }
         return token.trim();
     }
-
     private void ensureBaseFolder() {
         ApiResponse response = null;
         for (int attempt = 1; attempt <= 5; attempt++) {
@@ -129,7 +122,6 @@ public abstract class BaseApiTest {
         fail("Не удалось создать базовую папку " + BASE_TEST_PATH + ": "
                 + (response == null ? "нет ответа" : response.statusCode() + " " + response.body()));
     }
-
     private void silentlyDelete(String path) {
         try {
             client.deleteResource(path, true);
@@ -140,7 +132,6 @@ public abstract class BaseApiTest {
     protected static String shortUuid() {
         return UUID.randomUUID().toString().substring(0, 8);
     }
-
     private static void sleep(long millis) {
         try {
             Thread.sleep(millis);

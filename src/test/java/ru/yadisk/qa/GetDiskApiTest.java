@@ -13,7 +13,6 @@ class GetDiskApiTest extends BaseApiTest {
     @Test
     void diskInfoReturns200AndContainsExpectedFields() {
         ApiResponse response = client.getDiskInfo();
-
         assertStatus(response, 200);
         JsonNode json = response.json();
         assertTrue(json.has("total_space"), "В ответе GET /v1/disk нет поля total_space");
@@ -21,7 +20,6 @@ class GetDiskApiTest extends BaseApiTest {
         assertTrue(json.has("system_folders"), "В ответе GET /v1/disk нет поля system_folders");
         assertTrue(json.path("total_space").asLong() > 0, "total_space должно быть больше 0");
     }
-
     @Test
     void rootFolderMetadataHasTypeDirAndEmbeddedItems() {
         ApiResponse response = client.getResource("/");
@@ -31,7 +29,6 @@ class GetDiskApiTest extends BaseApiTest {
         assertTrue(response.json().path("_embedded").path("items").isArray(),
                 "В ответе должен быть список вложенных элементов _embedded.items");
     }
-
     @Test
     void nonExistentResourceReturns404() {
         String ghostPath = BASE_TEST_PATH + "/missing-" + UUID.randomUUID();
@@ -43,8 +40,6 @@ class GetDiskApiTest extends BaseApiTest {
 
     @Test
     void requestWithoutTokenReturns401() {
-        DiskApiClient unauthenticatedClient = new DiskApiClient("");
-
         ApiResponse response = unauthenticatedClient.getDiskInfo();
 
         assertStatus(response, 401);

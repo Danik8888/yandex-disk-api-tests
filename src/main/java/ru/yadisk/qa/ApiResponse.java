@@ -10,7 +10,6 @@ public record ApiResponse(int statusCode, String body, JsonNode json) {
     public ApiResponse(int statusCode, String body) {
         this(statusCode, body, parseJson(body));
     }
-
     private static JsonNode parseJson(String body) {
         if (body == null || body.isBlank()) {
             return null;

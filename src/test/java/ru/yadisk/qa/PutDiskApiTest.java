@@ -15,7 +15,6 @@ class PutDiskApiTest extends BaseApiTest {
         String folderPath = newFolderPath();
 
         ApiResponse create = client.createFolder(folderPath);
-
         assertStatus(create, 201);
         waitForResource(folderPath, Duration.ofSeconds(30));
 
@@ -27,7 +26,6 @@ class PutDiskApiTest extends BaseApiTest {
     @Test
     void duplicateFolderReturns409() {
         String folderPath = newFolderPath();
-
         assertStatus(client.createFolder(folderPath), 201);
         ApiResponse secondAttempt = client.createFolder(folderPath);
 
@@ -40,20 +38,16 @@ class PutDiskApiTest extends BaseApiTest {
         track(orphanPath);
 
         ApiResponse response = client.createFolder(orphanPath);
-
         assertTrue(response.statusCode() == 404 || response.statusCode() == 409,
                 "Ожидался 404 или 409, получено: " + response.statusCode() + " " + response.body());
     }
 
     @Test
     void createFolderWithoutTokenReturns401() {
-        DiskApiClient unauthenticatedClient = new DiskApiClient("");
-
         ApiResponse response = unauthenticatedClient.createFolder(BASE_TEST_PATH + "/no-auth-" + shortUuid());
 
         assertStatus(response, 401);
     }
-
     @Test
     void uploadFileViaPutUploadsContentToDisk() {
         String folderPath = newFolderPath();
@@ -63,14 +57,12 @@ class PutDiskApiTest extends BaseApiTest {
         ApiResponse link = client.getUploadLink(filePath);
         assertStatus(link, 200);
         assertEquals("PUT", link.json().path("method").asText("PUT"));
-
         ApiResponse upload = client.uploadFile(
                 link.json().path("href").asText(),
                 link.json().path("method").asText("PUT"),
                 "Hello, Yandex Disk! Привет, Яндекс.Диск!".getBytes(StandardCharsets.UTF_8));
         assertTrue(upload.statusCode() == 201 || upload.statusCode() == 202,
                 "PUT на href вернул неожиданный код: " + upload.statusCode() + " " + upload.body());
-
         waitForResource(filePath, Duration.ofSeconds(30));
         ApiResponse meta = client.getResource(filePath);
         assertStatus(meta, 200);

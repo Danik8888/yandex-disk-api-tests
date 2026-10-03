@@ -14,14 +14,12 @@ class DeleteDiskApiTest extends BaseApiTest {
     void deleteEmptyFolderReturns204() {
         String folderPath = newFolderPath();
         assertStatus(client.createFolder(folderPath), 201);
-
         ApiResponse delete = client.deleteResource(folderPath, true);
 
         assertEquals(204, delete.statusCode(), "Тело ответа: " + delete.body());
         waitForResourceAbsent(folderPath, Duration.ofSeconds(30));
         assertStatus(client.getResource(folderPath), 404);
     }
-
     @Test
     void deleteUploadedFileReturns204() {
         String folderPath = newFolderPath();
@@ -30,7 +28,6 @@ class DeleteDiskApiTest extends BaseApiTest {
         uploadSmallFile(filePath, "Context: текст для удаления");
 
         ApiResponse delete = client.deleteResource(filePath, true);
-
         assertEquals(204, delete.statusCode(), "Тело ответа: " + delete.body());
         waitForResourceAbsent(filePath, Duration.ofSeconds(30));
         assertStatus(client.getResource(filePath), 404);
@@ -41,9 +38,7 @@ class DeleteDiskApiTest extends BaseApiTest {
         String folderPath = newFolderPath();
         assertStatus(client.createFolder(folderPath), 201);
         uploadSmallFile(uniqueFilePath(folderPath, "inside.txt"), "файл внутри папки");
-
         ApiResponse delete = client.deleteResource(folderPath, true);
-
         assertTrue(delete.statusCode() == 202 || delete.statusCode() == 204,
                 "Ожидался 202 или 204, получено: " + delete.statusCode() + " " + delete.body());
         if (delete.statusCode() == 202) {
@@ -51,7 +46,6 @@ class DeleteDiskApiTest extends BaseApiTest {
             assertFalse(operationHref.isBlank(), "В ответе 202 должна быть ссылка на операцию");
             client.waitForOperation(operationHref, Duration.ofSeconds(60));
         }
-
         waitForResourceAbsent(folderPath, Duration.ofSeconds(30));
         assertStatus(client.getResource(folderPath), 404);
     }
